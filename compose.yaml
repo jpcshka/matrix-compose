@@ -1,0 +1,58 @@
+services:
+  caddy:
+    image: caddy:2.11.2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3 
+    environment:
+      - SYNAPSE_ADDRESS=synapse:8008
+      - LIVEKIT_ADDRESS=livekit:7880
+      - LK_JWT_ADDRESS=lkjwt:6080
+      - MAIN_URL=example.com
+      - SYNAPSE_URL=matrix.example.com
+      - LIVEKIT_URL=livekit.example.com
+      - ADMIN_EMAIL=admin@example.com
+    volumes:
+      - ./caddy:/etc/caddy 
+      - ./static:/srv 
+      - caddy_data:/data 
+      - caddy_config:/config 
+  synapse:
+    image: synapse_with_s3:v1.152.1 
+    build:
+      context: ./synapse
+    restart: unless-stopped
+    expose:
+      - "8008"
+    volumes:
+      - ./synapse/data:/data 
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    environment:
+      - GOGC=50
+    volumes:
+      - ./livekit/livekit.yaml:/etc/livekit.yaml
+    ports:
+      - "7881:7881" 
+      - "50100-50101:50100-50101/udp"
+    expose:
+      - 7880
+    restart: unless-stopped
+  lkjwt:
+    image: ghcr.io/element-hq/lk-jwt-service:0.4.4
+    environment:
+      - LIVEKIT_JWT_BIND=:6080
+      - LIVEKIT_URL=wss://livekit.example.com/livekit/sfu
+      - LIVEKIT_KEY=devkey
+      - LIVEKIT_SECRET=secret
+      - LIVEKIT_FULL_ACCESS_HOMESERVERS=example.com
+    expose:
+      - 6080
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

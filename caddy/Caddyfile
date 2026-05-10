@@ -1,0 +1,94 @@
+{
+    email {$ADMIN_EMAIL}
+}
+
+{$MAIN_URL} {
+	tls {
+		protocols tls1.2 tls1.3
+	}
+
+	handle /.well-known/matrix/client {
+		header {
+				Access-Control-Allow-Origin *
+				Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+				Access-Control-Allow-Headers "X-Requested-With, Authorization, Content-Type"
+				Content-Type application/json
+		}
+		respond `{
+				"m.homeserver": {
+						"base_url": "https://{$SYNAPSE_URL}"
+				},
+				"org.matrix.msc4143.rtc_foci": [
+						{
+								"type": "livekit",
+								"livekit_service_url": "https://{$LIVEKIT_URL}/livekit/jwt"
+						}
+				]
+		}               ` 200
+	}
+	handle /.well-known/matrix/server {
+		header {
+				Access-Control-Allow-Origin *
+				Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+				Access-Control-Allow-Headers "X-Requested-With, Authorization, Content-Type"
+				Content-Type application/json
+		}
+		respond `{"m.server": "{$SYNAPSE_URL}:443"}` 200
+	}
+	handle {
+		root /srv
+		file_server
+	}
+}
+
+{$SYNAPSE_URL} {
+	tls {
+		protocols tls1.2 tls1.3
+	}
+	request_body {
+		max_size 300MB
+	}
+
+	handle /_synapse/admin {
+		redir https://{$MAIN_URL}
+	}
+
+	@matrix {
+		path /_matrix/* /_synapse/client/*
+	}
+	handle @matrix {
+		reverse_proxy {$SYNAPSE_ADDRESS} {
+			health_uri /health
+			health_interval 10s
+			health_timeout 5s
+		}
+	}
+
+	handle {
+		redir https://{$MAIN_URL}
+	}
+}
+
+{$LIVEKIT_URL} {
+	tls {
+		protocols tls1.2 tls1.3
+	}
+
+	handle_path /livekit/jwt/* {
+		reverse_proxy {$LK_JWT_ADDRESS} {
+			header_up Host {host}
+			header_up X-Real-IP {remote}
+		}
+	}
+
+	handle_path /livekit/sfu/* {
+		reverse_proxy {$LIVEKIT_ADDRESS} {
+			header_up Host {host}
+			header_up X-Real-IP {remote}
+		}
+	}
+
+	handle {
+		redir https://{$MAIN_URL}
+	}
+}
