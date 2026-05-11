@@ -2,10 +2,6 @@
     email {$ADMIN_EMAIL}
 }
 
-:8000 {
-	respond /health "OK" 200
-}
-
 {$MAIN_URL} {
 	tls {
 		protocols tls1.2 tls1.3
@@ -42,6 +38,7 @@
 		}
 		respond `{"m.server": "{$SYNAPSE_URL}:443"}` 200
 	}
+	
 	handle {
 		root /srv
 		file_server
