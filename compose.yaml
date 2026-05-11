@@ -1,58 +1,83 @@
 services:
+  synapse:
+    image: synapse_with_s3:v1.152.1 
+    build:
+      context: ./synapse
+    expose:
+      - "8008"
+    volumes:
+      - ./synapse/data:/data 
+    restart: unless-stopped
+  
   caddy:
     image: caddy:2.11.2
-    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp" # HTTP/3 
     environment:
-      - SYNAPSE_ADDRESS=synapse:8008
-      - LIVEKIT_ADDRESS=livekit:7880
-      - LK_JWT_ADDRESS=lkjwt:6080
-      - MAIN_URL=example.com
-      - SYNAPSE_URL=matrix.example.com
-      - LIVEKIT_URL=livekit.example.com
-      - ADMIN_EMAIL=admin@example.com
+      - SYNAPSE_ADDRESS=${SYNAPSE_ADDRESS}
+      - LIVEKIT_ADDRESS=${LIVEKIT_ADDRESS}
+      - LK_JWT_ADDRESS=${LK_JWT_ADDRESS}
+      - MAIN_URL=${MAIN_URL}
+      - SYNAPSE_URL=${SYNAPSE_URL}
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
     volumes:
       - ./caddy:/etc/caddy 
       - ./static:/srv 
       - caddy_data:/data 
-      - caddy_config:/config 
-  synapse:
-    image: synapse_with_s3:v1.152.1 
-    build:
-      context: ./synapse
+      - caddy_config:/config
+    depends_on: 
+      synapse:
+        condition: service_healthy
     restart: unless-stopped
-    expose:
-      - "8008"
-    volumes:
-      - ./synapse/data:/data 
+
   livekit:
     image: livekit/livekit-server:latest
-    command: --config /etc/livekit.yaml
-    environment:
-      - GOGC=50
-    volumes:
-      - ./livekit/livekit.yaml:/etc/livekit.yaml
+    command: --config /etc/livekit.yaml --node-ip ${NODE_IP} --udp-port ${UDP_PORT}
     ports:
       - "7881:7881" 
-      - "50100-50101:50100-50101/udp"
+      - "${UDP_PORT}:${UDP_PORT}/udp"
+    environment:
+      - DEVKEY=${LIVEKIT_DEVKEY}
+      - SECRET=${LIVEKIT_SECRET}
+      - LIVEKIT_URL=${LIVEKIT_URL}
     expose:
       - 7880
+    volumes:
+      - ./livekit/livekit.yaml:/etc/livekit.yaml
+    depends_on:
+      - caddy
     restart: unless-stopped
+
   lkjwt:
     image: ghcr.io/element-hq/lk-jwt-service:0.4.4
     environment:
-      - LIVEKIT_JWT_BIND=:6080
-      - LIVEKIT_URL=wss://livekit.example.com/livekit/sfu
-      - LIVEKIT_KEY=devkey
-      - LIVEKIT_SECRET=secret
-      - LIVEKIT_FULL_ACCESS_HOMESERVERS=example.com
+      - LIVEKIT_JWT_BIND=${LIVEKIT_JWT_BIND}
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_KEY=${LIVEKIT_KEY}
+      - LIVEKIT_SECRET=${LIVEKIT_SECRET}
+      - LIVEKIT_FULL_ACCESS_HOMESERVERS=${MAIN_URL}
     expose:
       - 6080
+    depends_on:
+      - livekit
     restart: unless-stopped
+
+networks:
+  default:
+    name: matrix-network
 
 volumes:
   caddy_data:
   caddy_config:
+
+# image, build and command
+# ports 
+# environment variables
+# expose
+# volumes
+# healthcheck
+# depends_on
+# restart 

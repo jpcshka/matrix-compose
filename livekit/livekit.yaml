@@ -5,9 +5,9 @@ rtc:
   tcp_port: 7881
 #  port_range_start: 50100
 #  port_range_end: 50150
-  udp_port: 50100-50101
+#  udp_port: 50100-50101
   use_external_ip: false
-  node_ip: # server ip
+#  node_ip: # server ip
 turn:
   enabled: false
   domain: localhost
@@ -17,10 +17,10 @@ turn:
   udp_port: 443
   external_tls: true
 keys:
-  devkey: secret
+  ${DEVKEY}: ${SECRET}
 room:
   auto_create: false
 webhook:
-  api_key: devkey
+  api_key: ${DEVKEY}
   urls:
-    - https://livekit.example.com/livekit/jwt/sfu_webhook
+    - https://${LIVEKIT_URL}/livekit/jwt/sfu_webhook
