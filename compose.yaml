@@ -35,14 +35,10 @@ services:
 
   livekit:
     image: livekit/livekit-server:latest
-    command: --config /etc/livekit.yaml --node-ip ${NODE_IP} --udp-port ${UDP_PORT}
+    command: --config /etc/livekit.yaml
     ports:
       - "7881:7881" 
-      - "${UDP_PORT}:${UDP_PORT}/udp"
-    environment:
-      - DEVKEY=${LIVEKIT_DEVKEY}
-      - SECRET=${LIVEKIT_SECRET}
-      - LIVEKIT_URL=${LIVEKIT_URL}
+      - "50100-50101:50100-50101/udp"
     expose:
       - 7880
     volumes:
