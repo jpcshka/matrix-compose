@@ -6,7 +6,7 @@ services:
     expose:
       - "8008"
     volumes:
-      - ./synapse/data:/data 
+      - /var/lib/matrix-compose/data:/data 
     restart: unless-stopped
   
   caddy:
@@ -47,8 +47,6 @@ services:
       - 7880
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
-    depends_on:
-      - caddy
     restart: unless-stopped
 
   lkjwt:
@@ -56,7 +54,7 @@ services:
     environment:
       - LIVEKIT_JWT_BIND=${LIVEKIT_JWT_BIND}
       - LIVEKIT_URL=${LIVEKIT_URL}
-      - LIVEKIT_KEY=${LIVEKIT_KEY}
+      - LIVEKIT_KEY=${LIVEKIT_DEVKEY}
       - LIVEKIT_SECRET=${LIVEKIT_SECRET}
       - LIVEKIT_FULL_ACCESS_HOMESERVERS=${MAIN_URL}
     expose:

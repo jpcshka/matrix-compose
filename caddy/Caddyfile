@@ -1,5 +1,5 @@
 {
-    email {$ADMIN_EMAIL}
+	email {$ADMIN_EMAIL}
 }
 
 {$MAIN_URL} {
@@ -16,7 +16,7 @@
 		}
 		respond <<JSON
 			{
-			  	"m.homeserver": {
+				"m.homeserver": {
 					"base_url": "https://{$SYNAPSE_URL}"
 				},
 				"org.matrix.msc4143.rtc_foci": [
@@ -28,7 +28,7 @@
 			}
 			JSON 200
 	}
-	
+
 	handle /.well-known/matrix/server {
 		header {
 			Access-Control-Allow-Origin *
@@ -36,9 +36,13 @@
 			Access-Control-Allow-Headers "X-Requested-With, Authorization, Content-Type"
 			Content-Type application/json
 		}
-		respond `{"m.server": "{$SYNAPSE_URL}:443"}` 200
+		respond <<JSON
+			{
+				"m.server": "{$SYNAPSE_URL}:443"
+			}
+			JSON 200
 	}
-	
+
 	handle {
 		root /srv
 		file_server
