@@ -53,7 +53,7 @@ services:
     image: ghcr.io/element-hq/lk-jwt-service:0.4.4
     environment:
       - LIVEKIT_JWT_BIND=${LIVEKIT_JWT_BIND}
-      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_URL=${LIVEKIT_WSS_URL}
       - LIVEKIT_KEY=${LIVEKIT_DEVKEY}
       - LIVEKIT_SECRET=${LIVEKIT_SECRET}
       - LIVEKIT_FULL_ACCESS_HOMESERVERS=${MAIN_URL}
