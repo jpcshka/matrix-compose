@@ -38,7 +38,7 @@ services:
     command: --config /etc/livekit.yaml
     ports:
       - "7881:7881" 
-      - "50100-50101:50100-50101/udp"
+      - "50100-50101:50100-50101/udp" # udp_port
     expose:
       - 7880
     volumes:
