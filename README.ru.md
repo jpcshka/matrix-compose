@@ -1,6 +1,6 @@
-# Приватный Matrix сервер на базе Synapse
+# Matrix сервер на базе Synapse
 
-Готовая конфигурация для поднятия приватного Matrix homeserver через Docker Compose (без федерации).
+Готовая конфигурация для поднятия Matrix homeserver через Docker Compose.
 
 ## Оглавление
 

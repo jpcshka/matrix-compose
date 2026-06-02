@@ -1,6 +1,6 @@
-# Private Matrix Server based on Synapse
+# Matrix Server based on Synapse
 
-A ready-to-use configuration for deploying a private Matrix homeserver via Docker Compose (without federation).
+A ready-to-use configuration for deploying a Matrix homeserver via Docker Compose.
 
 > Also available in: [Русский](README.ru.md)
 
