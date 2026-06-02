@@ -2,3 +2,6 @@
 *.env
 
 livekit.yaml
+*.html
+*.js
+*.css

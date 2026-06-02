@@ -1,6 +1,6 @@
 services:
   synapse:
-    image: synapse_with_s3:v1.152.1 
+    image: synapse_with_s3:v1.153.0
     build:
       context: ./synapse
     expose:
@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
   
   caddy:
-    image: caddy:2.11.2
+    image: caddy:2.11.3
     ports:
       - "80:80"
       - "443:443"
@@ -38,7 +38,7 @@ services:
     command: --config /etc/livekit.yaml
     ports:
       - "7881:7881" 
-      - "50100-50101:50100-50101/udp" # udp_port
+      - "50100-50101:50100-50101/udp" # udp_ports
     expose:
       - 7880
     volumes:

@@ -1,3 +1,3 @@
-FROM matrixdotorg/synapse:v1.152.1
+FROM matrixdotorg/synapse:v1.153.0
 
-RUN python3 -m pip install synapse-s3-storage-provider boto
+RUN python3 -m pip install --no-cache-dir synapse-s3-storage-provider
