@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
   
   caddy:
-    image: caddy:2.11.3
+    image: caddy:2.11.4
     ports:
       - "80:80"
       - "443:443"
