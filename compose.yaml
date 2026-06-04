@@ -1,6 +1,6 @@
 services:
   synapse:
-    image: synapse_with_s3:v1.153.0
+    image: synapse_with_s3:v1.154.0
     build:
       context: ./synapse
     expose:
