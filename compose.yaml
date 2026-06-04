@@ -46,7 +46,7 @@ services:
     restart: unless-stopped
 
   lkjwt:
-    image: ghcr.io/element-hq/lk-jwt-service:0.4.4
+    image: ghcr.io/element-hq/lk-jwt-service:0.5.0
     environment:
       - LIVEKIT_JWT_BIND=${LIVEKIT_JWT_BIND}
       - LIVEKIT_URL=${LIVEKIT_WSS_URL}
