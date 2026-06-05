@@ -20,10 +20,10 @@
 
 ## Стек 
 
-- **[Matrix Synapse](https://github.com/element-hq/synapse)**: Основной homeserver, разрабатывается The Matrix.org Foundation на языке Python.
+- **[Matrix Synapse](https://github.com/element-hq/synapse)**: Основной homeserver, разрабатывается Element Creations Ltd на языке Python.
 - **[Caddy](https://github.com/caddyserver/caddy)**: Обратный прокси-сервер, выпускает и управляет сертификатами Let's Encrypt. Разрабатывается Мэттом Холтом на Go.
 - **[LiveKit](https://github.com/livekit/livekit)**: Медиа сервер для MatrixRTC, написан на Go компанией LiveKit Inc.
-- **[lk-jwt-service](https://github.com/element-hq/lk-jwt-service)**: Сервис авторизации для MatrixRTC, разрабатывается The Matrix.org Foundation на языке Go.
+- **[lk-jwt-service](https://github.com/element-hq/lk-jwt-service)**: Сервис авторизации для MatrixRTC, разрабатывается Element Creations Ltd на языке Go.
 
 
 ---

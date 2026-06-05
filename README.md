@@ -22,10 +22,10 @@ A ready-to-use configuration for deploying a Matrix homeserver via Docker Compos
 
 ## Stack
 
-- **[Matrix Synapse](https://github.com/element-hq/synapse)**: The main homeserver, developed by The Matrix.org Foundation in Python.
+- **[Matrix Synapse](https://github.com/element-hq/synapse)**: The main homeserver, developed by Element Creations Ltd in Python.
 - **[Caddy](https://github.com/caddyserver/caddy)**: Reverse proxy server, issues and manages Let's Encrypt certificates. Developed by Matt Holt in Go.
 - **[LiveKit](https://github.com/livekit/livekit)**: Media server for MatrixRTC, written in Go by LiveKit Inc.
-- **[lk-jwt-service](https://github.com/element-hq/lk-jwt-service)**: Authorization service for MatrixRTC, developed by The Matrix.org Foundation in Go.
+- **[lk-jwt-service](https://github.com/element-hq/lk-jwt-service)**: Authorization service for MatrixRTC, developed by Element Creations Ltd in Go.
 
 
 ---
