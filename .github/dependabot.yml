@@ -9,9 +9,7 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
-    ignore:
-      - dependency-name: "synapse_with_s3"
   - package-ecosystem: "docker"
     directory: "/synapse"
     schedule:
-      interval: "weekly"
+      interval: "daily"
