@@ -53,6 +53,11 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.extract_tag.outputs.tag }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+            org.opencontainers.image.title=Synapse S3
+            org.opencontainers.image.licenses=Apache-2.0
+            org.opencontainers.image.description=Synapse homeserver with synapse-s3-storage-provider
 
       - name: Generate artifact attestation
         uses: actions/attest@v4
