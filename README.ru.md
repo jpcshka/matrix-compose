@@ -14,7 +14,8 @@
     - [Caddy](#caddy)
     - [LiveKit](#livekit)
     - [lk-jwt-service](#lk-jwt-service)
-
+7. [Эксплуатация](#эксплуатация)
+    - [Автоматический деплой](#автоматический-деплой)
 
 ---
 
@@ -299,3 +300,79 @@ livekit:
 ### lk-jwt-service
 
 Сервис авторизации для MatrixRTC на базе [официального образа](https://github.com/element-hq/lk-jwt-service/pkgs/container/lk-jwt-service). Выступает посредником между клиентом и LiveKit: выдаёт JWT-токены, подтверждающие право на участие в звонке. Все параметры передаются через переменные окружения в .env — отдельный конфигурационный файл не требуется.
+
+
+---
+
+
+## Эксплуатация
+
+### Автоматический деплой
+
+Используйте GitHub Actions для автоматического деплоя. Скопируйте [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) в свой репозиторий — деплой будет запускаться автоматически при пуше тега `v*.*.*` или вручную.
+
+1. Создайте пользователя на сервере
+
+```bash
+sudo useradd -m -s /bin/bash gh-deploy
+sudo mkdir -p /home/gh-deploy/.ssh
+sudo chmod 700 /home/gh-deploy/.ssh
+```
+
+2. Создайте скрипт деплоя
+
+Создайте скрипт и сделайте его исполняемым:
+
+```bash
+sudo touch /path/to/deploy.sh
+sudo chmod +x /path/to/deploy.sh
+```
+
+Пример скрипта:
+
+```bash
+#!/bin/bash
+set -e
+
+cd /path/to/matrix-compose
+
+git pull origin main --ff-only
+docker compose pull
+docker compose up -d
+```
+
+3. Выдайте права sudo
+
+```bash
+echo "gh-deploy ALL=(root) NOPASSWD: /path/to/deploy.sh" | sudo tee /etc/sudoers.d/gh-deploy
+```
+
+4. Настройте SSH-доступ
+
+Сгенерируйте SSH-ключ для GitHub Actions и добавьте публичный ключ в `/home/gh-deploy/.ssh/authorized_keys` с принудительным запуском скрипта при подключении:
+
+```text
+command="sudo /path/to/deploy.sh",no-pty,no-port-forwarding,no-X11-forwarding,no-agent-forwarding ssh-ed25519 AAAA...
+```
+
+```bash
+sudo chmod 600 /home/gh-deploy/.ssh/authorized_keys
+sudo chown -R gh-deploy:gh-deploy /home/gh-deploy/.ssh
+```
+
+5. Добавьте секреты в репозиторий
+
+**Settings → Secrets and variables → Actions → New repository secret**
+
+Получите публичный ключ сервера для `SSH_KNOWN_HOSTS`:
+
+```bash
+ssh-keyscan -t ed25519 example.com
+```
+
+| Секрет | Описание |
+|---|---|
+| `SSH_PRIVATE_KEY` | Приватный SSH-ключ для подключения к серверу |
+| `SSH_KNOWN_HOSTS` | Публичный ключ сервера |
+| `SSH_USER` | Пользователь на сервере (`gh-deploy`) |
+| `SSH_HOST` | IP-адрес или домен сервера |

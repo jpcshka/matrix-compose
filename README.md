@@ -16,6 +16,8 @@ A ready-to-use configuration for deploying a Matrix homeserver via Docker Compos
     - [Caddy](#caddy)
     - [LiveKit](#livekit)
     - [lk-jwt-service](#lk-jwt-service)
+7. [Operations](#operations)
+    - [Automated Deployment](#automated-deployment)
 
 
 ---
@@ -301,3 +303,79 @@ If you use multiple LiveKit servers, Redis is required.
 ### lk-jwt-service
 
 Authorization service for MatrixRTC based on the [official image](https://github.com/element-hq/lk-jwt-service/pkgs/container/lk-jwt-service). Acts as middleware between the client and LiveKit: issues JWT tokens that authorize participation in a call. All parameters are passed via environment variables in `.env` — no separate configuration file is required.
+
+
+---
+
+
+## Operations
+
+### Automated Deployment
+
+Use GitHub Actions for automated deployment. Copy [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) into your repository — deployment will trigger automatically on a `v*.*.*` tag push or manually.
+
+1. Create a user on the server
+
+```bash
+sudo useradd -m -s /bin/bash gh-deploy
+sudo mkdir -p /home/gh-deploy/.ssh
+sudo chmod 700 /home/gh-deploy/.ssh
+```
+
+2. Create the deploy script
+
+Create the script and make it executable:
+
+```bash
+sudo touch /path/to/deploy.sh
+sudo chmod +x /path/to/deploy.sh
+```
+
+Example script:
+
+```bash
+#!/bin/bash
+set -e
+
+cd /path/to/matrix-compose
+
+git pull origin main --ff-only
+docker compose pull
+docker compose up -d
+```
+
+3. Grant sudo privileges
+
+```bash
+echo "gh-deploy ALL=(root) NOPASSWD: /path/to/deploy.sh" | sudo tee /etc/sudoers.d/gh-deploy
+```
+
+4. Configure SSH access
+
+Generate an SSH key for GitHub Actions and add the public key to `/home/gh-deploy/.ssh/authorized_keys` with a forced script execution on connection:
+
+```text
+command="sudo /path/to/deploy.sh",no-pty,no-port-forwarding,no-X11-forwarding,no-agent-forwarding ssh-ed25519 AAAA...
+```
+
+```bash
+sudo chmod 600 /home/gh-deploy/.ssh/authorized_keys
+sudo chown -R gh-deploy:gh-deploy /home/gh-deploy/.ssh
+```
+
+5. Add secrets to the repository
+
+**Settings → Secrets and variables → Actions → New repository secret**
+
+Get the server's public key for `SSH_KNOWN_HOSTS`:
+
+```bash
+ssh-keyscan -t ed25519 example.com
+```
+
+| Secret | Description |
+|---|---|
+| `SSH_PRIVATE_KEY` | Private SSH key for connecting to the server |
+| `SSH_KNOWN_HOSTS` | Server public key (output of `ssh-keyscan`) |
+| `SSH_USER` | User on the server (`gh-deploy`) |
+| `SSH_HOST` | Server IP address or domain |
