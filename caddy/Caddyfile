@@ -1,10 +1,13 @@
 {
 	email {$ADMIN_EMAIL}
+	metrics {
+		per_host
+	}
 }
 
 {$MAIN_URL} {
 	tls {
-		protocols tls1.2 tls1.3
+		protocols tls1.3 tls1.3
 	}
 
 	handle /.well-known/matrix/client {
@@ -51,7 +54,7 @@
 
 {$SYNAPSE_URL} {
 	tls {
-		protocols tls1.2 tls1.3
+		protocols tls1.3 tls1.3
 	}
 	request_body {
 		max_size 300MB
@@ -79,7 +82,7 @@
 
 {$LIVEKIT_URL} {
 	tls {
-		protocols tls1.2 tls1.3
+		protocols tls1.3 tls1.3
 	}
 
 	handle_path /livekit/jwt/* {
