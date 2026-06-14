@@ -72,7 +72,7 @@ services:
     restart: unless-stopped
 
   node_exporter:
-    image: quay.io/prometheus/node-exporter:v1.11.1
+    image: prom/node-exporter:v1.11.1
     command: --path.rootfs=/host
     expose:
       - 9100

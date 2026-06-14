@@ -14,18 +14,21 @@
     - [Caddy](#caddy)
     - [LiveKit](#livekit)
     - [lk-jwt-service](#lk-jwt-service)
+    - [Prometheus & Grafana](#prometheus--grafana)
 7. [Эксплуатация](#эксплуатация)
     - [Автоматический деплой](#автоматический-деплой)
 
 ---
 
-## Стек 
+## Стек
 
 - **[Matrix Synapse](https://github.com/element-hq/synapse)**: Основной homeserver, разрабатывается Element Creations Ltd на языке Python.
 - **[Caddy](https://github.com/caddyserver/caddy)**: Обратный прокси-сервер, выпускает и управляет сертификатами Let's Encrypt. Разрабатывается Мэттом Холтом на Go.
 - **[LiveKit](https://github.com/livekit/livekit)**: Медиа сервер для MatrixRTC, написан на Go компанией LiveKit Inc.
 - **[lk-jwt-service](https://github.com/element-hq/lk-jwt-service)**: Сервис авторизации для MatrixRTC, разрабатывается Element Creations Ltd на языке Go.
-
+- **[Prometheus](https://github.com/prometheus/prometheus)**: Сервис сбора метрик, разрабатывается Cloud Native Computing Foundation на языке Go.
+- **[Grafana OSS](https://github.com/grafana/grafana)**: Платформа наблюдаемости и визуализации данных, разрабатывается Grafana Labs на языке Go.
+- **[Node Exporter](https://github.com/prometheus/node_exporter)**: Экспортер системных метрик, разрабатывается Cloud Native Computing Foundation на языке Go.
 
 ---
 
@@ -36,8 +39,9 @@
 .
 ├── caddy/              # Конфигурация Caddy (Caddyfile)
 ├── livekit/            # Пример конфигурации livekit (livekit.yaml.example)
-├── synapse/            # Synapse с S3 поддержкой (Dockerfile)
+├── prometheus/         # Конфигурация Prometheus (prometheus.yml)
 ├── static/             # Статические файлы для заглушки (html, css, js)
+├── synapse/            # Synapse с S3 поддержкой (Dockerfile)
 ├── .env.example        # Пример переменных окружения
 └── compose.yaml        # Основной файл запуска
 ```
@@ -78,9 +82,10 @@
 Сделайте А-записи для доменов Matrix homeserver и MatrixRTC. Укажите свой IP-адрес.
 
 ```dns
-example.com          A    203.0.113.1 
+example.com          A    203.0.113.1
 matrix.example.com   A    203.0.113.1
 livekit.example.com  A    203.0.113.1
+grafana.example.com  A    203.0.113.1
 ```
 
 > Все сервисы размещаются на одном сервере, поэтому DNS-записи должны указывать на один IP-адрес.
@@ -301,6 +306,45 @@ livekit:
 
 Сервис авторизации для MatrixRTC на базе [официального образа](https://github.com/element-hq/lk-jwt-service/pkgs/container/lk-jwt-service). Выступает посредником между клиентом и LiveKit: выдаёт JWT-токены, подтверждающие право на участие в звонке. Все параметры передаются через переменные окружения в .env — отдельный конфигурационный файл не требуется.
 
+
+---
+
+### Prometheus & Grafana
+
+Стек мониторинга на базе официальных образов: [Prometheus](https://hub.docker.com/r/prom/prometheus) собирает метрики со всех сервисов, [node-exporter](https://hub.docker.com/r/prom/node-exporter) — метрики хоста, [Grafana](https://hub.docker.com/r/grafana/grafana) — визуализация.
+
+Для сбора метрик Synapse необходимо добавить в `homeserver.yaml`:
+
+```yaml
+enable_metrics: true
+listeners:
+  # beginning of the new metrics listener
+  - port: 9000
+    type: metrics
+    bind_addresses: ['0.0.0.0']
+```
+
+Для сбора метрик LiveKit добавьте в `livekit/livekit.yaml`:
+
+```yaml
+prometheus_port: 6789
+```
+
+Caddy отдаёт метрики на порту `2019` — это уже настроено в `Caddyfile` и `prometheus/prometheus.yml`, дополнительных действий не требуется.
+
+Grafana доступна через Caddy с basic_auth. Для генерации хэша пароля (argon2id):
+
+```bash
+docker compose exec -it caddy sh
+caddy hash-password --algorithm argon2id --plaintext 'yourpassword'
+```
+
+
+**Подробнее:**
+- [Документация Prometheus](https://prometheus.io/docs/introduction/overview/)
+- [Документация Grafana](https://grafana.com/docs/grafana/latest/)
+- [Caddy hash-password](https://caddyserver.com/docs/command-line#caddy-hash-password)
+- [Документация Synapse](https://element-hq.github.io/synapse/latest/metrics-howto.html)
 
 ---
 

@@ -16,6 +16,7 @@ A ready-to-use configuration for deploying a Matrix homeserver via Docker Compos
     - [Caddy](#caddy)
     - [LiveKit](#livekit)
     - [lk-jwt-service](#lk-jwt-service)
+    - [Prometheus & Grafana](#prometheus--grafana)
 7. [Operations](#operations)
     - [Automated Deployment](#automated-deployment)
 
@@ -28,6 +29,9 @@ A ready-to-use configuration for deploying a Matrix homeserver via Docker Compos
 - **[Caddy](https://github.com/caddyserver/caddy)**: Reverse proxy server, issues and manages Let's Encrypt certificates. Developed by Matt Holt in Go.
 - **[LiveKit](https://github.com/livekit/livekit)**: Media server for MatrixRTC, written in Go by LiveKit Inc.
 - **[lk-jwt-service](https://github.com/element-hq/lk-jwt-service)**: Authorization service for MatrixRTC, developed by Element Creations Ltd in Go.
+- **[Prometheus](https://github.com/prometheus/prometheus)**: Metrics collection service, developed by Cloud Native Computing Foundation in Go.
+- **[Grafana OSS](https://github.com/grafana/grafana)**: Observability and data visualization platform, developed by Grafana Labs in Go.
+- **[Node Exporter](https://github.com/prometheus/node_exporter)**: System metrics exporter, developed by Cloud Native Computing Foundation in Go.
 
 
 ---
@@ -39,8 +43,9 @@ A ready-to-use configuration for deploying a Matrix homeserver via Docker Compos
 .
 ├── caddy/              # Caddy configuration (Caddyfile)
 ├── livekit/            # LiveKit configuration example (livekit.yaml.example)
-├── synapse/            # Synapse with S3 support (Dockerfile)
+├── prometheus/         # Prometheus configuration (prometheus.yml)
 ├── static/             # Static files for the placeholder page (html, css, js)
+├── synapse/            # Synapse with S3 support (Dockerfile)
 ├── .env.example        # Environment variables example
 └── compose.yaml        # Main compose file
 ```
@@ -84,6 +89,7 @@ Create A records for your Matrix homeserver and MatrixRTC domains pointing to yo
 example.com          A    203.0.113.1
 matrix.example.com   A    203.0.113.1
 livekit.example.com  A    203.0.113.1
+grafana.example.com  A    203.0.113.1
 ```
 
 > All services run on the same server, so all DNS records should point to the same IP address.
@@ -303,6 +309,45 @@ If you use multiple LiveKit servers, Redis is required.
 ### lk-jwt-service
 
 Authorization service for MatrixRTC based on the [official image](https://github.com/element-hq/lk-jwt-service/pkgs/container/lk-jwt-service). Acts as middleware between the client and LiveKit: issues JWT tokens that authorize participation in a call. All parameters are passed via environment variables in `.env` — no separate configuration file is required.
+
+
+---
+
+### Prometheus & Grafana
+
+Monitoring stack based on official images: [Prometheus](https://hub.docker.com/r/prom/prometheus) collects metrics from all services, [node-exporter](https://hub.docker.com/r/prom/node-exporter) — host metrics, [Grafana](https://hub.docker.com/r/grafana/grafana) — visualization.
+
+To enable Synapse metrics, add to `homeserver.yaml`:
+
+```yaml
+enable_metrics: true
+listeners:
+  # beginning of the new metrics listener
+  - port: 9000
+    type: metrics
+    bind_addresses: ['0.0.0.0']
+```
+
+To enable LiveKit metrics, add to `livekit/livekit.yaml`:
+
+```yaml
+prometheus_port: 6789
+```
+
+Caddy exposes metrics on port `2019` — this is already configured in `Caddyfile` and `prometheus/prometheus.yml`, no additional steps required.
+
+Grafana is available via Caddy with basic_auth. To generate a password hash (argon2id):
+
+```bash
+docker compose exec -it caddy sh
+caddy hash-password --algorithm argon2id --plaintext 'yourpassword'
+```
+
+**See also:**
+- [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)
+- [Grafana Documentation](https://grafana.com/docs/grafana/latest/)
+- [Caddy hash-password](https://caddyserver.com/docs/command-line#caddy-hash-password)
+- [Synapse Metrics](https://element-hq.github.io/synapse/latest/metrics-howto.html)
 
 
 ---
