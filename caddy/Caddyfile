@@ -112,5 +112,7 @@
 	basic_auth argon2id {
 		{$ADMIN_EMAIL} {$GRAFANA_PASSWORD_HASH}
 	}
-	reverse_proxy {$GRAFANA_ADDRESS}
+	reverse_proxy {$GRAFANA_ADDRESS} {
+		header_up -Authorization
+	}
 }
