@@ -103,3 +103,14 @@
 		redir https://{$MAIN_URL}
 	}
 }
+
+{$GRAFANA_URL} {
+	tls {
+		protocols tls1.3 tls1.3
+	}
+
+	basic_auth argon2id {
+		{$ADMIN_EMAIL} {$GRAFANA_PASSWORD_HASH}
+	}
+	reverse_proxy {$GRAFANA_ADDRESS}
+}

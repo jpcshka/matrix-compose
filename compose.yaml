@@ -3,6 +3,7 @@ services:
     image: ghcr.io/jpcshka/synapse-s3:v1.154.0
     expose:
       - "8008"
+      - "9000"
     volumes:
       - /var/lib/matrix-compose/data:/data 
     restart: unless-stopped
@@ -17,10 +18,13 @@ services:
       - SYNAPSE_ADDRESS=${SYNAPSE_ADDRESS}
       - LIVEKIT_ADDRESS=${LIVEKIT_ADDRESS}
       - LK_JWT_ADDRESS=${LK_JWT_ADDRESS}
+      - GRAFANA_ADDRESS=${GRAFANA_ADDRESS}
       - MAIN_URL=${MAIN_URL}
       - SYNAPSE_URL=${SYNAPSE_URL}
       - LIVEKIT_URL=${LIVEKIT_URL}
+      - GRAFANA_URL=${GRAFANA_URL}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - GRAFANA_PASSWORD_HASH=${GRAFANA_PASSWORD_HASH}
     volumes:
       - ./caddy:/etc/caddy 
       - ./static:/srv 
@@ -56,6 +60,35 @@ services:
     depends_on:
       - livekit
     restart: unless-stopped
+  
+  prometheus:
+    image: prom/prometheus:v3.12.0
+    command: --config.file=/etc/prometheus/prometheus.yml
+    expose:
+      - 9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:v1.11.1
+    command: --path.rootfs=/host
+    expose:
+      - 9100
+    pid: host
+    volumes:
+      - '/:/host:ro,rslave'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.0.2
+    expose:
+      - 3000
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    restart: unless-stopped
+
 
 networks:
   default:
@@ -64,6 +97,8 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  prometheus_data:
+  grafana-storage:
 
 # image, build and command
 # ports 

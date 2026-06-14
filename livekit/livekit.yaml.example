@@ -18,6 +18,7 @@ turn:
   external_tls: true
 keys:
   devkey: secret
+prometheus_port: 6789
 room:
   auto_create: false
 webhook:

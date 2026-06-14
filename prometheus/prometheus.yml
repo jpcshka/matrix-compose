@@ -1,0 +1,24 @@
+global:
+    scrape_interval: 15s  
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: "synapse"
+    metrics_path: "/_synapse/metrics"
+    static_configs:
+      - targets: ["synapse:9000"]
+
+  - job_name: "caddy"
+    static_configs:
+      - targets: ['caddy:2019']
+
+  - job_name: "livekit"
+    static_configs:
+      - targets: ["livekit:6789"]
+
+  - job_name: "node"
+    static_configs:
+      - targets: ['node-exporter:9100']
