@@ -19,6 +19,7 @@ A ready-to-use configuration for deploying a Matrix homeserver via Docker Compos
     - [Prometheus & Grafana](#prometheus--grafana)
 7. [Operations](#operations)
     - [Automated Deployment](#automated-deployment)
+    - [Media Cleanup](#media-cleanup)
 
 
 ---
@@ -45,7 +46,7 @@ A ready-to-use configuration for deploying a Matrix homeserver via Docker Compos
 ├── livekit/            # LiveKit configuration example (livekit.yaml.example)
 ├── prometheus/         # Prometheus configuration (prometheus.yml)
 ├── static/             # Static files for the placeholder page (html, css, js)
-├── synapse/            # Synapse with S3 support (Dockerfile)
+├── synapse/            # Synapse with S3 support (Dockerfile, homeserver.example.yaml)
 ├── .env.example        # Environment variables example
 └── compose.yaml        # Main compose file
 ```
@@ -127,6 +128,7 @@ Matrix homeserver based on the official [matrixdotorg/synapse](https://hub.docke
 Configuration files, keys, and media are stored in `/var/lib/matrix-compose/data`.
 
 Create the directory:
+
 ```bash
 mkdir -p /var/lib/matrix-compose/data
 ```
@@ -141,6 +143,8 @@ docker run -it --rm \
     matrixdotorg/synapse:latest generate
 
 ```
+
+You can also use the configuration example from the repository as a starting point: `synapse/homeserver.example.yaml`.
 
 Add the following line to `homeserver.yaml`:
 
@@ -424,3 +428,63 @@ ssh-keyscan -t ed25519 example.com
 | `SSH_KNOWN_HOSTS` | Server public key (output of `ssh-keyscan`) |
 | `SSH_USER` | User on the server (`gh-deploy`) |
 | `SSH_HOST` | Server IP address or domain |
+
+---
+
+
+### Media Cleanup
+
+With the S3 module enabled, Synapse still saves media files locally. To transfer already accumulated files to S3 and free up local storage, the plugin developers provide the `s3_media_upload` script.
+
+1. Download the script:
+
+```bash
+wget https://raw.githubusercontent.com/matrix-org/synapse-s3-storage-provider/main/scripts/s3_media_upload
+chmod +x s3_media_upload
+```
+
+2. Create a `database.yaml` file with Postgres connection details:
+
+```yaml
+user: synapse_user
+password: your-strong-password
+dbname: synapse
+host: 203.0.113.1
+port: 5432
+```
+
+3. Media files are owned by the user with uid `991` (synapse inside the container), so the script must be run as `root`:
+
+```bash
+sudo su
+```
+
+4. Create a virtual environment and install dependencies:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install boto3 botocore humanize psycopg2-binary tqdm pyyaml
+```
+
+5. Set AWS environment variables:
+
+```bash
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+export AWS_DEFAULT_REGION="your-region"
+```
+
+6. Mark files older than 30 days as ready for upload:
+
+```bash
+./s3_media_upload update /var/lib/matrix-compose/data/media_store/ 30d
+```
+
+7. Upload files to S3 and delete local copies:
+
+```bash
+./s3_media_upload upload /var/lib/matrix-compose/data/media_store/ your-bucket --endpoint-url https://s3.example.com --delete
+```
+
+> A `cache.db` file will be created during the process — do not delete it: it will be updated on subsequent runs.

@@ -17,6 +17,7 @@
     - [Prometheus & Grafana](#prometheus--grafana)
 7. [Эксплуатация](#эксплуатация)
     - [Автоматический деплой](#автоматический-деплой)
+    - [Очистка медиа](#очистка-медиа)
 
 ---
 
@@ -41,7 +42,7 @@
 ├── livekit/            # Пример конфигурации livekit (livekit.yaml.example)
 ├── prometheus/         # Конфигурация Prometheus (prometheus.yml)
 ├── static/             # Статические файлы для заглушки (html, css, js)
-├── synapse/            # Synapse с S3 поддержкой (Dockerfile)
+├── synapse/            # Synapse с S3 поддержкой (Dockerfile, homeserver.example.yaml)
 ├── .env.example        # Пример переменных окружения
 └── compose.yaml        # Основной файл запуска
 ```
@@ -123,6 +124,7 @@ Matrix homeserver на базе официального образа [matrixdot
 Конфиги, ключи и медиа хранятся в `/var/lib/matrix-compose/data`.
 
 Создайте директорию:
+
 ```bash
 mkdir -p /var/lib/matrix-compose/data
 ```
@@ -137,6 +139,8 @@ docker run -it --rm \
     matrixdotorg/synapse:latest generate
 
 ```
+
+За основу можно взять пример конфигурации из репозитория `synapse/homeserver.example.yaml`.
 
 Добавьте в `homeserver.yaml` строку:
 
@@ -178,7 +182,7 @@ listeners:
     x_forwarded: true
 ```
 
-Также необходимо включить MSCs (Matrix spec proposals) и указать домен LiveKit сервера.
+Также необходимо включить MSCs (Matrix spec proposals) и указать домен LiveKit сервера:
 
 ```yaml
 experimental_features:
@@ -199,7 +203,7 @@ matrix_rtc:
     livekit_service_url: https://livekit.example.com/livekit/jwt
 ```
 
-Для работы s3 необходимо прописать настройки хранилища:
+Для работы S3 необходимо прописать настройки хранилища:
 
 ```yaml
 media_storage_providers:
@@ -285,7 +289,7 @@ rtc:
   udp_port: 50100-50101
 ```
 
-Также необходимо открыть эти порты в compose.yaml:
+Также необходимо открыть эти порты в `compose.yaml`:
 
 ```yaml
 livekit:
@@ -304,7 +308,7 @@ livekit:
 
 ### lk-jwt-service
 
-Сервис авторизации для MatrixRTC на базе [официального образа](https://github.com/element-hq/lk-jwt-service/pkgs/container/lk-jwt-service). Выступает посредником между клиентом и LiveKit: выдаёт JWT-токены, подтверждающие право на участие в звонке. Все параметры передаются через переменные окружения в .env — отдельный конфигурационный файл не требуется.
+Сервис авторизации для MatrixRTC на базе [официального образа](https://github.com/element-hq/lk-jwt-service/pkgs/container/lk-jwt-service). Выступает посредником между клиентом и LiveKit: выдаёт JWT-токены, подтверждающие право на участие в звонке. Все параметры передаются через переменные окружения в `.env` — отдельный конфигурационный файл не требуется.
 
 
 ---
@@ -420,3 +424,63 @@ ssh-keyscan -t ed25519 example.com
 | `SSH_KNOWN_HOSTS` | Публичный ключ сервера |
 | `SSH_USER` | Пользователь на сервере (`gh-deploy`) |
 | `SSH_HOST` | IP-адрес или домен сервера |
+
+---
+
+
+### Очистка медиа
+
+С подключённым модулем S3 Synapse всё равно сохраняет медиафайлы локально. Для переноса уже накопленных файлов в S3 и очистки локального хранилища разработчики плагина предоставляют скрипт `s3_media_upload`.
+
+1. Скачайте скрипт:
+
+```bash
+wget https://raw.githubusercontent.com/matrix-org/synapse-s3-storage-provider/main/scripts/s3_media_upload
+chmod +x s3_media_upload
+```
+
+2. Создайте файл `database.yaml` с данными для подключения к Postgres:
+
+```yaml
+user: synapse_user
+password: your-strong-password
+dbname: synapse
+host: 203.0.113.1
+port: 5432
+```
+
+3. Медиафайлы принадлежат пользователю с uid `991` (synapse внутри контейнера), поэтому скрипт необходимо запускать от `root`:
+
+```bash
+sudo su
+```
+
+4. Создайте виртуальное окружение и установите зависимости:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install boto3 botocore humanize psycopg2-binary tqdm pyyaml
+```
+
+5. Задайте переменные окружения AWS:
+
+```bash
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+export AWS_DEFAULT_REGION="your-region"
+```
+
+6. Пометьте файлы старше 30 дней как готовые к загрузке:
+
+```bash
+./s3_media_upload update /var/lib/matrix-compose/data/media_store/ 30d
+```
+
+7. Загрузите файлы в S3 и удалите локальные копии:
+
+```bash
+./s3_media_upload upload /var/lib/matrix-compose/data/media_store/ your-bucket --endpoint-url https://s3.example.com --delete
+```
+
+> В процессе будет создан файл `cache.db` — его не стоит удалять: при последующих запусках он будет обновляться.

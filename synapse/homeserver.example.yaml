@@ -1,0 +1,97 @@
+# Configuration file for Synapse.
+#
+# This is a YAML file: see [1] for a quick introduction. Note in particular
+# that *indentation is important*: all the elements of a list or dictionary
+# should have the same indentation.
+#
+# [1] https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
+#
+# For more information on how to configure Synapse, including a complete accounting of
+# each option, go to docs/usage/configuration/config_documentation.md or
+# https://element-hq.github.io/synapse/latest/usage/configuration/config_documentation.html
+server_name: "example.com"
+pid_file: /data/homeserver.pid
+log_config: "/data/log.yaml"
+media_store_path: /data/media_store
+signing_key_path: "/data/homeserver.signing.key"
+registration_shared_secret: your-secret
+macaroon_secret_key: your-secret
+form_secret: your-secret
+report_stats: false
+public_baseurl: "https://matrix.example.com/"
+
+listeners:
+  - port: 8008
+    resources:
+    - compress: false
+      names:
+      - client
+      - federation
+    tls: false
+    type: http
+    x_forwarded: true
+
+  - port: 9000
+    type: metrics
+    bind_addresses: ['0.0.0.0']
+    
+enable_metrics: true
+database:
+  name: psycopg2
+  args:
+    user: synapse_user
+    password: your-strong-password
+    dbname: synapse
+    host: database-ip
+    port: 5432
+    cp_min: 5
+    cp_max: 10
+    keepalives_idle: 10
+    keepalives_interval: 10
+    keepalives_count: 3
+
+media_storage_providers:
+  - module: s3_storage_provider.S3StorageProviderBackend
+    store_local: True
+    store_remote: True
+    store_synchronous: True
+    config:
+      bucket: 
+      region_name: 
+      endpoint_url: 
+      access_key_id: 
+      secret_access_key: 
+      path_style_access: true
+
+enable_authenticated_media: true
+max_upload_size: 300M
+unused_expiration_time: 24h
+max_image_pixels: 32M
+dynamic_thumbnails: true
+
+url_preview_enabled: true
+url_preview_ip_range_blacklist:
+  - 127.0.0.0/8
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16
+
+trusted_key_servers:
+  - server_name: "matrix.org"
+
+experimental_features:
+  msc4222_enabled: true
+  msc4354_enabled: true
+
+max_event_delay_duration: 24h
+rc_message:
+  per_second: 0.5
+  burst_count: 30
+rc_delayed_event_mgmt:
+  per_second: 1
+  burst_count: 20
+
+matrix_rtc:
+  transports:
+  - type: livekit
+    livekit_service_url: https://livekit.example.com/livekit/jwt
