@@ -7,10 +7,24 @@
 	}
 }
 
-{$MAIN_URL} {
+(settings) {
 	tls {
-		protocols tls1.3 tls1.3
+		protocols tls1.3
 	}
+	encode zstd gzip
+	header {
+		-Server
+		-Via
+		-X-Powered-By
+		Strict-Transport-Security "max-age=31536000; includeSubDomains;"
+		X-Robots-Tag "noindex, nofollow"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
+
+{$MAIN_URL} {
+	import settings
 
 	handle /.well-known/matrix/client {
 		header {
@@ -55,9 +69,7 @@
 }
 
 {$SYNAPSE_URL} {
-	tls {
-		protocols tls1.3 tls1.3
-	}
+	import settings
 	request_body {
 		max_size 300MB
 	}
@@ -74,6 +86,7 @@
 			health_uri /health
 			health_interval 10s
 			health_timeout 5s
+			header_down -Server
 		}
 	}
 
@@ -83,9 +96,7 @@
 }
 
 {$LIVEKIT_URL} {
-	tls {
-		protocols tls1.3 tls1.3
-	}
+	import settings
 
 	handle_path /livekit/jwt/* {
 		reverse_proxy {$LK_JWT_ADDRESS} {
@@ -107,9 +118,7 @@
 }
 
 {$GRAFANA_URL} {
-	tls {
-		protocols tls1.3 tls1.3
-	}
+	import settings
 
 	basic_auth argon2id {
 		{$ADMIN_EMAIL} {$GRAFANA_PASSWORD_HASH}
