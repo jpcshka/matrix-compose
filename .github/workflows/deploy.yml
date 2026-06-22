@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  validate-compose:
+  validate-configs:
     name: Validate compose.yaml and Caddyfile
     runs-on: ubuntu-latest
     steps:
@@ -31,7 +31,7 @@ jobs:
 
   deploy:
     name: Deploy to production
-    needs: validate-compose
+    needs: validate-configs
     runs-on: ubuntu-latest
     steps:
       - name: Setup SSH
