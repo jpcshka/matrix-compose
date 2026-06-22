@@ -388,9 +388,25 @@ set -e
 
 cd /path/to/matrix-compose
 
-git pull origin main --ff-only
+echo "Pulling changes"
+git fetch origin main
+
+CADDYFILE_CHANGED=$(git diff HEAD origin/main -- caddy/Caddyfile)
+
+git merge --ff-only origin/main
+
+echo "Pulling images"
 docker compose pull
+
+echo "Starting services"
 docker compose up -d
+
+if [ -n "$CADDYFILE_CHANGED" ]; then
+  echo "Caddyfile changed, reloading Caddy"
+  docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+fi
+
+echo "Done!"
 ```
 
 3. Grant sudo privileges
