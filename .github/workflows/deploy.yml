@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   validate-compose:
-    name: Validate compose.yaml
+    name: Validate compose.yaml and Caddyfile
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 
@@ -20,6 +20,14 @@ jobs:
 
       - name: Validate compose.yaml
         run: docker compose up --dry-run
+      
+      - name: Validate Caddyfile
+        run: |
+          grep -v '^#' .env.example | sed 's/ #.*$//' > .env.validation
+          docker run --rm \
+            -v ${{ github.workspace }}/caddy:/etc/caddy \
+            --env-file .env.validation \
+            caddy:latest caddy validate --config /etc/caddy/Caddyfile  
 
   deploy:
     name: Deploy to production
@@ -36,6 +44,3 @@ jobs:
       - name: Deploy with SSH
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
-
-
-  
