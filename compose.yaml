@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
 
   livekit:
-    image: livekit/livekit-server:v1.13.1
+    image: livekit/livekit-server:v1.13.2
     command: --config /etc/livekit.yaml
     ports:
       - "7881:7881" 
