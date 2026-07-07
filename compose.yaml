@@ -7,6 +7,9 @@ services:
     volumes:
       - /var/lib/matrix-compose/data:/data 
     restart: unless-stopped
+    networks:
+      - synapse
+      - monitoring
   
   caddy:
     image: caddy:2.11.4
@@ -34,6 +37,12 @@ services:
       synapse:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - synapse
+      - livekit
+      - lkjwt
+      - grafana
+      - monitoring
 
   livekit:
     image: livekit/livekit-server:v1.13.2
@@ -46,6 +55,9 @@ services:
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     restart: unless-stopped
+    networks:
+      - livekit
+      - monitoring
 
   lkjwt:
     image: ghcr.io/element-hq/lk-jwt-service:0.5.0
@@ -60,6 +72,8 @@ services:
     depends_on:
       - livekit
     restart: unless-stopped
+    networks:
+      - lkjwt
   
   prometheus:
     image: prom/prometheus:v3.13.0
@@ -72,6 +86,9 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     restart: unless-stopped
+    networks:
+      - monitoring
+      - graf
 
   node_exporter:
     image: prom/node-exporter:v1.11.1
@@ -82,6 +99,8 @@ services:
     volumes:
       - '/:/host:ro,rslave'
     restart: unless-stopped
+    networks:
+      - monitoring
 
   grafana:
     image: grafana/grafana:13.1.0
@@ -90,11 +109,18 @@ services:
     volumes:
       - grafana-storage:/var/lib/grafana
     restart: unless-stopped
+    networks:
+      - grafana
+      - graf
 
 
 networks:
-  default:
-    name: matrix-network
+  synapse:
+  livekit:
+  lkjwt:
+  grafana:
+  monitoring:
+  graf:
 
 volumes:
   caddy_data:
@@ -110,3 +136,4 @@ volumes:
 # healthcheck
 # depends_on
 # restart 
+# networks
