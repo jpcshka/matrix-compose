@@ -1,6 +1,6 @@
 services:
   synapse:
-    image: ghcr.io/jpcshka/synapse-s3:v1.155.0
+    image: ghcr.io/jpcshka/synapse-s3:v1.156.0
     expose:
       - "8008"
       - "9000"
