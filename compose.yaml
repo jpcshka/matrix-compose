@@ -76,7 +76,7 @@ services:
       - lkjwt
   
   prometheus:
-    image: prom/prometheus:v3.13.0
+    image: prom/prometheus:v3.13.1
     command: --config.file=/etc/prometheus/prometheus.yml
     expose:
       - 9090
