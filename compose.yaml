@@ -45,7 +45,7 @@ services:
       - monitoring
 
   livekit:
-    image: livekit/livekit-server:v1.13.4
+    image: livekit/livekit-server:v1.13.5
     command: --config /etc/livekit.yaml
     ports:
       - "7881:7881" 
