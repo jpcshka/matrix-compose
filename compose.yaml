@@ -12,7 +12,7 @@ services:
       - monitoring
   
   caddy:
-    image: caddy:2.11.4
+    image: caddy:2.11.6
     ports:
       - "80:80"
       - "443:443"
