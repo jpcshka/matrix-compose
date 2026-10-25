@@ -1,11 +1,29 @@
 services:
+  postgresdb:
+    image: postgres:18-alpine
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - synapse
+
   synapse:
     image: ghcr.io/jpcshka/synapse-s3:v1.163.2
     expose:
       - "8008"
       - "9000"
     volumes:
-      - /var/lib/matrix-compose/data:/data 
+      - /var/lib/matrix-compose/data:/data
+    depends_on:
+      postgresdb:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - synapse
@@ -80,8 +98,6 @@ services:
     command: --config.file=/etc/prometheus/prometheus.yml
     expose:
       - 9090
-    extra_hosts:
-      - "postgresdb:${POSTGRES_DB_IP}"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -123,6 +139,7 @@ networks:
   graf:
 
 volumes:
+  postgres_data:
   caddy_data:
   caddy_config:
   prometheus_data:

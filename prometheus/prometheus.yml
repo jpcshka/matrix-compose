@@ -23,8 +23,7 @@ scrape_configs:
     static_configs:
       - targets: 
         - node_exporter:9100
-        - postgresdb:9100
 
-  - job_name: "postgres"
-    static_configs:
-      - targets: ['postgresdb:9308']
+  # - job_name: "postgres"
+  #   static_configs:
+  #     - targets: ['postgresdb:9308']
