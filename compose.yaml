@@ -119,7 +119,7 @@ services:
       - monitoring
 
   grafana:
-    image: grafana/grafana:13.2.4
+    image: grafana/grafana:13.3.0
     expose:
       - 3000
     volumes:
